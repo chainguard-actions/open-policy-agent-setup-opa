@@ -1,0 +1,40 @@
+name: Test OPA setup with semver range
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup-opa
+        uses: .
+        with:
+          version: ">=0.50.0 <0.70.0"
+      - name: Assert OPA is installed
+        run: |
+          which opa
+          if [ $? -ne 0 ]; then
+            echo "FAIL: opa not found on PATH"
+            exit 1
+          fi
+          echo "PASS: opa found on PATH"
+      - name: Assert OPA version is within range
+        run: |
+          OPA_VERSION_OUTPUT=$(opa version)
+          echo "OPA version output: $OPA_VERSION_OUTPUT"
+          # Extract version number from output like "Version: 0.61.0"
+          VERSION=$(echo "$OPA_VERSION_OUTPUT" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          echo "Extracted version: $VERSION"
+          if [ -z "$VERSION" ]; then
+            echo "FAIL: could not extract version number"
+            exit 1
+          fi
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          echo "Major: $MAJOR, Minor: $MINOR"
+          if [ "$MAJOR" -eq 0 ] && [ "$MINOR" -ge 50 ] && [ "$MINOR" -lt 70 ]; then
+            echo "PASS: OPA version $VERSION is within range >=0.50.0 <0.70.0"
+          else
+            echo "FAIL: OPA version $VERSION is NOT within range >=0.50.0 <0.70.0"
+            exit 1
+          fi

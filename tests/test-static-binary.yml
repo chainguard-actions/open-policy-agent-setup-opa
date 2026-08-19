@@ -1,0 +1,40 @@
+name: Test OPA setup with static binary
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup-opa
+        uses: .
+        with:
+          version: 0.61.0
+          static: 'true'
+      - name: Assert OPA static binary is installed
+        run: |
+          which opa
+          if [ $? -ne 0 ]; then
+            echo "FAIL: opa not found on PATH"
+            exit 1
+          fi
+          echo "PASS: opa found on PATH"
+      - name: Assert OPA static binary runs correctly
+        run: |
+          OPA_VERSION_OUTPUT=$(opa version)
+          echo "OPA version output: $OPA_VERSION_OUTPUT"
+          if echo "$OPA_VERSION_OUTPUT" | grep -q "0.61.0"; then
+            echo "PASS: OPA static binary version 0.61.0 is installed"
+          else
+            echo "FAIL: expected OPA version 0.61.0 but got: $OPA_VERSION_OUTPUT"
+            exit 1
+          fi
+      - name: Assert OPA static binary can evaluate policy
+        run: |
+          RESULT=$(opa eval '1 + 1 == 2')
+          echo "OPA eval result: $RESULT"
+          if [ -z "$RESULT" ]; then
+            echo "FAIL: opa eval returned empty output"
+            exit 1
+          fi
+          echo "PASS: opa static binary eval succeeded"

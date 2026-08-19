@@ -1,0 +1,39 @@
+name: Test basic OPA setup (latest version)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup-opa
+        uses: .
+        with:
+          version: latest
+      - name: Assert OPA is installed and executable
+        run: |
+          echo "Checking OPA binary..."
+          which opa
+          if [ $? -ne 0 ]; then
+            echo "FAIL: opa not found on PATH"
+            exit 1
+          fi
+          echo "PASS: opa found on PATH"
+      - name: Assert OPA version output
+        run: |
+          OPA_VERSION=$(opa version)
+          echo "OPA version: $OPA_VERSION"
+          if [ -z "$OPA_VERSION" ]; then
+            echo "FAIL: opa version returned empty output"
+            exit 1
+          fi
+          echo "PASS: opa version returned output"
+      - name: Assert OPA can evaluate a simple policy
+        run: |
+          RESULT=$(echo '{"x": 1}' | opa eval -I 'data.x == 1')
+          echo "OPA eval result: $RESULT"
+          if [ -z "$RESULT" ]; then
+            echo "FAIL: opa eval returned empty output"
+            exit 1
+          fi
+          echo "PASS: opa eval succeeded"
