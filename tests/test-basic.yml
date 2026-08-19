@@ -1,0 +1,29 @@
+name: Test basic usage (latest OPA)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup-opa
+        uses: .
+        with:
+          version: latest
+      - name: Assert OPA is installed
+        run: |
+          echo "Checking OPA binary..."
+          if ! command -v opa &>/dev/null; then
+            echo "FAIL: opa command not found in PATH"
+            exit 1
+          fi
+          echo "PASS: opa found at $(which opa)"
+      - name: Assert OPA version output
+        run: |
+          VERSION_OUTPUT=$(opa version)
+          echo "opa version output: $VERSION_OUTPUT"
+          if ! echo "$VERSION_OUTPUT" | grep -qiE 'version|opa'; then
+            echo "FAIL: unexpected version output"
+            exit 1
+          fi
+          echo "PASS"

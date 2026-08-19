@@ -1,0 +1,29 @@
+name: Test specific OPA version installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup-opa
+        uses: .
+        with:
+          version: 0.68.0
+      - name: Assert OPA is installed
+        run: |
+          echo "Checking OPA binary..."
+          if ! command -v opa &>/dev/null; then
+            echo "FAIL: opa command not found in PATH"
+            exit 1
+          fi
+          echo "PASS: opa found at $(which opa)"
+      - name: Assert OPA version matches expected
+        run: |
+          VERSION_OUTPUT=$(opa version)
+          echo "opa version output: $VERSION_OUTPUT"
+          if ! echo "$VERSION_OUTPUT" | grep -q '0.68.0'; then
+            echo "FAIL: expected version 0.68.0 but got: $VERSION_OUTPUT"
+            exit 1
+          fi
+          echo "PASS: version 0.68.0 confirmed"
