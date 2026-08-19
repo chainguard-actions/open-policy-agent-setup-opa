@@ -1,0 +1,62 @@
+name: Test Setup OPA
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  test:
+    name: Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        version: ["<0.34", "0.34.1", "latest", "edge"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
+
+      - name: Setup opa
+        uses: ./
+        with:
+          version: ${{ matrix.version }}
+
+      - name: Get expected version
+        env:
+          MATRIX_VERSION: ${{ matrix.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "$MATRIX_VERSION" = "<0.34" ]; then
+            export EXPECTED_VERSION=v0.33.1
+          elif [ "$MATRIX_VERSION" = "0.34.1" ]; then
+            export EXPECTED_VERSION=v0.34.1
+          else
+            # get the latest version info from the github api
+            export EXPECTED_VERSION=$(curl --header "authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/open-policy-agent/opa/releases/latest | jq -r .name )
+          fi
+          if [ "$MATRIX_VERSION" = "edge" ]; then
+            export EXPECTED_VERSION="$(echo $EXPECTED_VERSION | awk -F. '{print $1"."$2+1".0-dev"}')"
+          fi
+          echo "Expected version for $MATRIX_VERSION: $EXPECTED_VERSION"
+          safe=$(printf '%s' "$EXPECTED_VERSION" | tr -d '\n\r')
+          echo "EXPECTED_VERSION=$safe" >> "$GITHUB_ENV"
+      - name: Capture version installed
+        run: |
+          echo "VERSION_INSTALLED=$( opa version | head -1 | sed 's/Version: /v/' )" >> "$GITHUB_ENV"
+      - name: Verify
+        shell: bash
+        run: |
+          if [ "$EXPECTED_VERSION" != "$VERSION_INSTALLED" ]; then
+            echo "Unexpected version, expected $EXPECTED_VERSION, got: $VERSION_INSTALLED"
+            exit 1;
+          fi
+          exit 0;

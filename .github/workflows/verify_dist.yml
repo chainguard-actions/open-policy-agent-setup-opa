@@ -1,0 +1,37 @@
+name: Verify dist is up to date (npm run prepare)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  verify-dist:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3
+
+      - run: npm install
+
+      - name: Rebuild dist (npm run prepare)
+        run: npm run prepare
+
+      - name: Verify no dist changes
+        run: |
+
+          if [ -n "$(git status dist --porcelain)" ]; then
+            # Uncommitted changes
+            git status dist --porcelain
+            echo "::error::Uncommitted changes after npm run prepare.  Run 'npm run prepare' and commit any changes to ./dist."
+            exit 1
+          fi

@@ -1,0 +1,22 @@
+name: Test specific OPA version installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup-opa
+        uses: .
+        with:
+          version: 0.60.0
+          github-token: ${{ github.token }}
+      - name: Assert OPA version is correct
+        run: |
+          INSTALLED=$(opa version | head -1)
+          echo "Installed: $INSTALLED"
+          if ! echo "$INSTALLED" | grep -q "0.60.0"; then
+            echo "FAIL: expected version 0.60.0 but got: $INSTALLED"
+            exit 1
+          fi
+          echo "PASS: correct OPA version installed"
