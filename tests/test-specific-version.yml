@@ -1,0 +1,24 @@
+name: Test OPA setup with specific version
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: setup-opa
+        uses: .
+        with:
+          version: 0.68.0
+          github-token: ${{ github.token }}
+      - name: Assert OPA version matches requested version
+        run: |
+          echo "OPA version output:"
+          opa version
+          VERSION=$(opa version | head -1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+          echo "Detected version: $VERSION"
+          if [ "$VERSION" != "0.68.0" ]; then
+            echo "FAIL: expected version 0.68.0 but got $VERSION"
+            exit 1
+          fi
+          echo "PASS: correct OPA version installed"
