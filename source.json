@@ -4,8 +4,13 @@
   "version": "v2.4.0",
   "commit_sha": "b2b258e089860efaadaaf71bf6e3aecb4a3eeff1",
   "url": "https://github.com/open-policy-agent/setup-opa",
-  "policy_sha": "d636be7e43ef829af6e853da6b3c7566db9f72fe",
+  "policy_sha": "374911c4be584df24e6da57af2d990570ef0f859",
   "test_policy_sha": "843adf9e4b8f85d0c08b27b9d0b09dd094b54702",
   "test_agent_version": "2",
-  "harden_agent_version": "2"
+  "harden_agent_version": "2",
+  "dist_artifact": {
+    "gcs_uri": "gs://patch-actions-node-artifacts/dist-artifacts/open-policy-agent/setup-opa/v2.4.0/sha256-88b632c238b75d8ac32c92e2085edf15809f06630a9d5ccc6da3fb5dc9016176.tar.gz",
+    "sha256": "88b632c238b75d8ac32c92e2085edf15809f06630a9d5ccc6da3fb5dc9016176",
+    "size_bytes": 645903
+  }
 }
